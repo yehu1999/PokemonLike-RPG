@@ -1,0 +1,173 @@
+myPlayer.png
+size: 100, 100
+format: RGBA8888
+filter: Linear,Linear
+repeat: none
+still
+  rotate: false
+  xy: 0, 0
+  size: 20, 20
+  orig: 20, 20
+  offset: 0, 0
+  index: -1
+still
+  rotate: false
+  xy: 20, 0
+  size: 20, 20
+  orig: 20, 20
+  offset: 0, 0
+  index: -1
+still
+  rotate: false
+  xy: 40, 0
+  size: 20, 20
+  orig: 20, 20
+  offset: 0, 0
+  index: -1
+up
+  rotate: false
+  xy: 60, 0
+  size: 20, 20
+  orig: 20, 20
+  offset: 0, 0
+  index: -1
+up
+  rotate: false
+  xy: 80, 0
+  size: 20, 20
+  orig: 20, 20
+  offset: 0, 0
+  index: -1
+up
+  rotate: false
+  xy: 0, 20
+  size: 20, 20
+  orig: 20, 20
+  offset: 0, 0
+  index: -1
+left
+  rotate: false
+  xy: 20, 20
+  size: 20, 20
+  orig: 20, 20
+  offset: 0, 0
+  index: -1
+left
+  rotate: false
+  xy: 40, 20
+  size: 20, 20
+  orig: 20, 20
+  offset: 0, 0
+  index: -1
+left
+  rotate: false
+  xy: 60, 20
+  size: 20, 20
+  orig: 20, 20
+  offset: 0, 0
+  index: -1
+right
+  rotate: false
+  xy: 80, 20
+  size: 20, 20
+  orig: 20, 20
+  offset: 0, 0
+  index: -1
+right
+  rotate: false
+  xy: 0, 40
+  size: 20, 20
+  orig: 20, 20
+  offset: 0, 0
+  index: -1
+right
+  rotate: false
+  xy: 20, 40
+  size: 20, 20
+  orig: 20, 20
+  offset: 0, 0
+  index: -1
+down
+  rotate: false
+  xy: 40, 40
+  size: 20, 20
+  orig: 20, 20
+  offset: 0, 0
+  index: -1
+down
+  rotate: false
+  xy: 60, 40
+  size: 20, 20
+  orig: 20, 20
+  offset: 0, 0
+  index: -1
+down
+  rotate: false
+  xy: 80, 40
+  size: 20, 20
+  orig: 20, 20
+  offset: 0, 0
+  index: -1
+up_run
+  rotate: false
+  xy: 0, 60
+  size: 20, 20
+  orig: 20, 20
+  offset: 0, 0
+  index: -1
+up_run
+  rotate: false
+  xy: 20, 60
+  size: 20, 20
+  orig: 20, 20
+  offset: 0, 0
+  index: -1
+up_run
+  rotate: false
+  xy: 40, 60
+  size: 20, 20
+  orig: 20, 20
+  offset: 0, 0
+  index: -1
+left_run
+  rotate: false
+  xy: 60, 60
+  size: 20, 20
+  orig: 20, 20
+  offset: 0, 0
+  index: -1
+left_run
+  rotate: false
+  xy: 80, 60
+  size: 20, 20
+  orig: 20, 20
+  offset: 0, 0
+  index: -1
+left_run
+  rotate: false
+  xy: 0, 80
+  size: 20, 20
+  orig: 20, 20
+  offset: 0, 0
+  index: -1
+right_run
+  rotate: false
+  xy: 20, 80
+  size: 20, 20
+  orig: 20, 20
+  offset: 0, 0
+  index: -1
+right_run
+  rotate: false
+  xy: 40, 80
+  size: 20, 20
+  orig: 20, 20
+  offset: 0, 0
+  index: -1
+right_run
+  rotate: false
+  xy: 60, 80
+  size: 20, 20
+  orig: 20, 20
+  offset: 0, 0
+  index: -1
