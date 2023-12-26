@@ -38,9 +38,11 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.ListIterator;
 import java.util.Locale;
+import java.util.Random;
 
-import theEntities.Enemy;
 import theEntities.Player;
+import theEntities.Pokemon;
+import theEntities.Laser;
 
 /**
  * 游戏场景
@@ -48,24 +50,34 @@ import theEntities.Player;
  */
 public class PlayScreen implements Screen {
 
-	private TiledMap map;//地图
+	private TiledMap map;                        //地图
 	private OrthogonalTiledMapRenderer renderer; //地图渲染器 //IsometricTiledMapRenderer
-	private OrthographicCamera camera;//相机
+	private ShapeRenderer objectRenderer;        //MapObject渲染器
+	private OrthographicCamera camera;           //相机
 	
 	private Player player;//玩家
 	private TextureAtlas playerAtlas;//玩家图像集
-	private float oldView;//玩家视野存值
+	private float oldView;   //玩家视野存值
 
-	private LinkedList<Enemy> enemys;//敌人
+	private LinkedList<Pokemon> pokemons;                        //宝可梦对象链表
+	public static final int POKEMON_SPECIES_NUM = 11;             //宝可梦种类数量 
+	public static final int POKEMON_NUM = 11;                     //宝可梦最大数量 
+	private int pokemonNum = 0;                                  //当前宝可梦数量
+	private TextureAtlas pokemonsAtlas[] = new TextureAtlas[25]; //宝可梦图像集
+	private Animation Pup[] = new Animation[POKEMON_NUM],        //宝可梦动画资源
+					Pdown[] = new Animation[POKEMON_NUM], 
+					Pleft[] = new Animation[POKEMON_NUM], 
+					Pright[] = new Animation[POKEMON_NUM];
 	
-	private ShapeRenderer objectRenderer;//MapObject渲染器
+	private LinkedList<Laser> lasers;                          //镭射对象链表
+	public static final int LASER_NUM = 100;                   //镭射最大数量
 	
 	@Override
 	public void show() {
 		TmxMapLoader loader = new TmxMapLoader();
 		
 		//加载地图tmx文件 
-		map = loader.load("maps/Mymap.tmx");//isometric
+		map = loader.load("maps/Mymap.tmx");//isometric		
 		
 		//map渲染器
 		renderer = new OrthogonalTiledMapRenderer(map);//IsometricTiledMapRenderer
@@ -78,7 +90,7 @@ public class PlayScreen implements Screen {
 		//相机
 		camera = new OrthographicCamera();
 		
-		//动画
+		//玩家动画
 		playerAtlas = new TextureAtlas("img/myPlayer.pack");
 		Animation still, up, down, left, right;
 		still = new Animation<TextureRegion>(1 / 2f, playerAtlas.findRegions("still"));
@@ -92,13 +104,33 @@ public class PlayScreen implements Screen {
 		left.setPlayMode(Animation.PlayMode.LOOP);
 		right.setPlayMode(Animation.PlayMode.LOOP);
 		
+		//宝可梦动画
+		for(int i = 0; i < POKEMON_SPECIES_NUM; i++) {//加载所有种类宝可梦的动画资源
+			pokemonsAtlas[i] = new TextureAtlas("img/pokemons/" + i + ".pack");
+			
+			Pup[i] = new Animation<TextureRegion>(1 / 6f, pokemonsAtlas[i].findRegions("up"));
+			Pdown[i] = new Animation<TextureRegion>(1 / 6f, pokemonsAtlas[i].findRegions("down"));
+			Pleft[i] = new Animation<TextureRegion>(1 / 6f, pokemonsAtlas[i].findRegions("left"));
+			Pright[i] = new Animation<TextureRegion>(1 / 6f, pokemonsAtlas[i].findRegions("right"));
+			Pup[i].setPlayMode(Animation.PlayMode.LOOP);
+			Pdown[i].setPlayMode(Animation.PlayMode.LOOP);
+			Pleft[i].setPlayMode(Animation.PlayMode.LOOP);
+			Pright[i].setPlayMode(Animation.PlayMode.LOOP);
+		}
+		
 		//玩家对象
 		player = new Player(still, up, down, left, right, (TiledMapTileLayer) map.getLayers().get(0));
 		player.setPosition(player.POISTION_X * player.getCollisionLayer().getTileWidth(), (player.getCollisionLayer().getHeight() - player.POISTION_Y) * player.getCollisionLayer().getTileHeight());
 		oldView = player.view;
 		
-		//敌人池对象
-		enemys = new LinkedList<>();
+		//宝可梦对象链表
+		pokemons = new LinkedList<>();
+		for(int i = 0; i < POKEMON_NUM; i++) {
+			pokemons.add(new Pokemon(Pup[i], Pdown[i], Pleft[i], Pright[i], (TiledMapTileLayer) map.getLayers().get(0)));
+		}
+		
+		//镭射对象链表
+		lasers = new LinkedList<>();
 		
 		//设置控制输入
 		Gdx.input.setInputProcessor(player);
@@ -121,12 +153,12 @@ public class PlayScreen implements Screen {
 		
 		float tileWidth = layer.getTileWidth();
 		float tileHeight = layer.getTileHeight();
-		int ViewBeginX = (int) (player.getX() / tileWidth)  - 30;
+		int ViewBeginX = (int) (player.getX() / tileWidth)  - 300;
 		ViewBeginX = (ViewBeginX > 0) ? ViewBeginX : 0;
-		int ViewEndX = ViewBeginX + 60;
-		int ViewBeginY = (int) (player.getY() / tileHeight) - 30;
+		int ViewEndX = ViewBeginX + 600;
+		int ViewBeginY = (int) (player.getY() / tileHeight) - 300;
 		ViewBeginY = (ViewBeginY > 0) ? ViewBeginY : 0;
-		int ViewEndY = ViewBeginY + 60;
+		int ViewEndY = ViewBeginY + 600;
 		for(int x = ViewBeginX; x < layer.getWidth() && x < ViewEndX; x++)
 			for(int y = ViewBeginY; y < layer.getHeight() && y < ViewEndY; y++) {
 				Cell cell = layer.getCell(x, y);
@@ -141,6 +173,9 @@ public class PlayScreen implements Screen {
 
 	@Override
 	public void render(float delta) {
+		//相关更新
+		update();
+		
 		//渲染
 		Gdx.gl.glClearColor(0, 0, 0, 1);
 		Gdx.gl.glClear(GL30.GL_COLOR_BUFFER_BIT | GL30.GL_DEPTH_BUFFER_BIT);
@@ -166,11 +201,32 @@ public class PlayScreen implements Screen {
 		//渲染背景地图
 		renderer.renderTileLayer((TiledMapTileLayer)map.getLayers().get("background"));
 		
+		//渲染前景地图
+		renderer.renderTileLayer((TiledMapTileLayer)map.getLayers().get("foreground"));
+		
+		//渲染宝可梦
+		ListIterator<Pokemon> iterator = pokemons.listIterator();
+		while (iterator.hasNext()) {
+        	Pokemon poke = iterator.next();
+        	if(poke.isLive) {
+        		poke.draw(renderer.getBatch());
+        	} 
+        }
+		
 		//渲染玩家
 		player.draw(renderer.getBatch());
 		
-		//渲染前景地图
-		renderer.renderTileLayer((TiledMapTileLayer)map.getLayers().get("foreground"));
+		//渲染镭射
+		ListIterator<Laser> laserIterator = lasers.listIterator();
+		while (iterator.hasNext()) {
+			Laser laser = laserIterator.next();
+        	if(laser.isLive) {
+        		laser.draw(renderer.getBatch());
+        	} 
+        }
+		
+		//渲染迷雾地图
+		renderer.renderTileLayer((TiledMapTileLayer)map.getLayers().get("smog"));
 		
 		//渲染MapObject
 		objectRenderer.setProjectionMatrix(camera.combined);//根据相机位置进行渲染
@@ -247,8 +303,36 @@ public class PlayScreen implements Screen {
 		map.dispose();
 		renderer.dispose();
 		player.getTexture().dispose();
-		playerAtlas.dispose();
+		lasers.clear();
+		pokemons.clear();
 		objectRenderer.dispose();
+	}
+	
+	public void update() {
+		
+		//应用宝可梦AI
+		for(Pokemon pokemon : pokemons) {
+			pokemon.SimpleAI(player.getX(),player.getY());
+		}
+		
+		ListIterator<Pokemon> iterator = pokemons.listIterator();
+        while (iterator.hasNext()) {
+        	Pokemon poke = iterator.next();
+    		//生成宝可梦
+        	if(poke.generate(pokemonNum, player.meetOdd)) {
+        		pokemonNum++;
+        	}
+        	
+            //消灭宝可梦
+        	if(poke.lives <= 0) {
+        		poke.isLive = false;
+        		pokemonNum--;
+        	}
+        }
+        
+
+        
+		
 	}
 
 }

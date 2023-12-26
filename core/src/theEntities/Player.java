@@ -9,6 +9,7 @@ import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.Animation;
 import com.badlogic.gdx.graphics.g2d.Batch;
 import com.badlogic.gdx.graphics.g2d.Sprite;
+import com.badlogic.gdx.graphics.g2d.TextureAtlas;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.maps.tiled.TiledMapTileLayer;
 import com.badlogic.gdx.maps.tiled.TiledMapTileLayer.Cell;
@@ -21,32 +22,59 @@ import com.badlogic.gdx.math.Vector2;
 public class Player extends Sprite implements InputProcessor{//implements InputProcessor引入控制输入接口
 	
 	//玩家常量数据
-	public static final float POISTION_X = 250 , POISTION_Y = 350;//初始位置
+	public static final float POISTION_X = 150 , POISTION_Y = 100;//初始位置
 	public static final float SPEED = 60 * 2;                //初始速度
 	public static final float gravity = 60 * 1.8f;           //重力
 	public static final float friction = 60 * 2.0f;          //摩擦力
+	
 	public static final float NORMAL_VIEW = 1.0f;            //正常的视野缩放
 	public static final float STRANGE_VIEW = 7.5f;           //奇怪的视野缩放
+	public static final float NORMAL_MEETODD = 10.0f;        //正常的奇遇值
+	public static final float STRANGE_MEETODD = 75.0f;       //奇怪的奇遇值
 	
 	public static final int MAXLIVES = 100;                  //最大生命值
+	
+	public static final String blockedKey = "blocked";       //碰撞属性关键字
+	
+	private static final TextureAtlas playerAtlas = new TextureAtlas("img/myplayer.pack");//玩家图像集
 
 	//玩家变量数据
-	private Boolean isLive = true;             //是否存活
-	private int lives = MAXLIVES;              //生命值
-	
+	public int findPokemonsNUM = 0;            //发现宝可梦数量
+	private int faceTo = 0;//面向 0UP 1Down 2Left 3Right
 	private Vector2 velocity = new Vector2();  //速度向量
 	private float speed = SPEED;               //速度大小
 	private boolean isMove_UP = false, isMove_DOWN = false, isMove_LEFT = false, isMove_RIGHT = false;//移动状态标志
 	
-	public float view = NORMAL_VIEW;                         //当前视野缩放
+	public float view = NORMAL_VIEW;           //当前视野缩放
+	public float meetOdd = NORMAL_MEETODD;     //当前奇遇值
 	
 	private TiledMapTileLayer collisionLayer;  //碰撞层
-	private String blockedKey = "blocked";     //碰撞属性关键字
 	private float increment;                   //步长
 	
+	/*
+	private Animation<TextureRegion> animationStillUp, animationStillDown, animationStillLeft, animationStillRight, 
+	animationUp ,animationDown , animationLeft, animationRight,
+	animationBombLeft, animationBombRight, animationCube, animationSitLeft, animationSitRight,
+	animationDeadLeft, animationDeadRight;     //动画
+	*/
 	private Animation<TextureRegion> animationStill, animationUp ,animationDown , animationLeft, animationRight;      //动画
 	float animationTime = 0;                   //动画时间
 	
+	private Boolean isLive = true;             //是否存活
+	private int lives = MAXLIVES;              //生命值
+	private int NearAttackValue = 45;          //近战伤害
+	private int farAttackValue = 30;           //远战伤害
+	
+	/*
+	public Player(TiledMapTileLayer collisionLayer) {
+		super();
+		
+		setAnimation();
+		this.collisionLayer = collisionLayer;
+		//setScale(1);
+		//setSize(collisionLayer.getWidth() / 3, collisionLayer.getHeight() * 1.25f);
+	}
+	*/
 	public Player(Animation<TextureRegion> still, Animation<TextureRegion> up, Animation<TextureRegion> down, Animation<TextureRegion> left, Animation<TextureRegion> right, TiledMapTileLayer collisionLayer) {
 		super(still.getKeyFrame(0));
 		this.animationStill = still;
@@ -67,12 +95,17 @@ public class Player extends Sprite implements InputProcessor{//implements InputP
 	}
 	
 	public void update(float delta) {
-		//视野变换
+		
+		//进入奇异大陆，视野及奇遇值变换
 		float oldView = view;
-		if(getY() < 150 * getCollisionLayer().getTileHeight())
+		if(getY() < 150 * getCollisionLayer().getTileHeight()) {
 			view = STRANGE_VIEW;
-		else
+			meetOdd = STRANGE_MEETODD;
+		}
+		else {
 			view = NORMAL_VIEW;
+			meetOdd = NORMAL_MEETODD;
+		}
 			
 		//应用重力
 		//velocity.y -= gravity * delta;
@@ -147,6 +180,8 @@ public class Player extends Sprite implements InputProcessor{//implements InputP
 			//velocity.y = 0;
 		}
 		
+		//受击检测
+		
 		//更新动画参数
 		animationTime += delta;
 		if(velocity.x < 0) {
@@ -158,6 +193,16 @@ public class Player extends Sprite implements InputProcessor{//implements InputP
 		}else if(velocity.y > 0) {
 			setRegion((TextureRegion) animationUp.getKeyFrame(animationTime));
 		}else {
+			/*
+			if(faceTo == 0)
+				setRegion((TextureRegion) animationStillUp.getKeyFrame(animationTime));
+			else if(faceTo == 1)
+				setRegion((TextureRegion) animationStillDown.getKeyFrame(animationTime));
+			else if(faceTo == 2)
+				setRegion((TextureRegion) animationStillLeft.getKeyFrame(animationTime));
+			else if(faceTo == 3)
+				setRegion((TextureRegion) animationStillRight.getKeyFrame(animationTime));
+				*/
 			setRegion((TextureRegion) animationStill.getKeyFrame(animationTime));
 		}
 		
@@ -230,21 +275,25 @@ public class Player extends Sprite implements InputProcessor{//implements InputP
 	public boolean keyDown(int keycode) {
 		switch(keycode) {
 		case Keys.W:
+			faceTo = 0;
 			velocity.y = speed;
 			isMove_UP = true;
 			animationTime = 0;
 			break;
 		case Keys.S:
+			faceTo = 1;
 			velocity.y = -speed;
 			isMove_DOWN = true;
 			animationTime = 0;
 			break;
 		case Keys.A:
+			faceTo = 2;
 			velocity.x = -speed;
 			isMove_LEFT = true;
 			animationTime = 0;
 			break;
 		case Keys.D:
+			faceTo = 3;
 			velocity.x = speed;
 			isMove_RIGHT = true;
 			animationTime = 0;
@@ -284,11 +333,15 @@ public class Player extends Sprite implements InputProcessor{//implements InputP
 
 	@Override
 	public boolean touchDown(int screenX, int screenY, int pointer, int button) {
+		
+		
 		return false;
 	}
 
 	@Override
 	public boolean touchUp(int screenX, int screenY, int pointer, int button) {
+		
+		
 		return false;
 	}
 
@@ -313,4 +366,45 @@ public class Player extends Sprite implements InputProcessor{//implements InputP
 		// TODO Auto-generated method stub
 		return false;
 	}
+	
+	/*
+	private void setAnimation() {
+		
+		//玩家动画
+		animationStillUp = new Animation<TextureRegion>(1 / 2f, playerAtlas.findRegions("still"));
+		animationStillDown = new Animation<TextureRegion>(1 / 2f, playerAtlas.findRegions("still_down"));
+		animationStillLeft = new Animation<TextureRegion>(1 / 2f, playerAtlas.findRegions("still_left"));
+		animationStillRight = new Animation<TextureRegion>(1 / 2f, playerAtlas.findRegions("still_right"));
+		animationUp = new Animation<TextureRegion>(1 / 6f, playerAtlas.findRegions("up"));
+		animationDown = new Animation<TextureRegion>(1 / 6f, playerAtlas.findRegions("down"));
+		animationLeft = new Animation<TextureRegion>(1 / 6f, playerAtlas.findRegions("left"));
+		animationRight = new Animation<TextureRegion>(1 / 6f, playerAtlas.findRegions("right"));
+		
+		animationBombLeft = new Animation<TextureRegion>(1 / 6f, playerAtlas.findRegions("bomb_left"));
+		animationBombRight = new Animation<TextureRegion>(1 / 6f, playerAtlas.findRegions("bomb_right"));
+		animationCube = new Animation<TextureRegion>(1 / 6f, playerAtlas.findRegions("cube"));
+		animationSitLeft = new Animation<TextureRegion>(1 / 6f, playerAtlas.findRegions("sit_left"));
+		animationSitRight = new Animation<TextureRegion>(1 / 6f, playerAtlas.findRegions("sit_right"));
+		animationDeadLeft = new Animation<TextureRegion>(1 / 6f, playerAtlas.findRegions("dead_left"));
+		animationDeadRight = new Animation<TextureRegion>(1 / 6f, playerAtlas.findRegions("dead_right"));
+		
+		animationStillUp.setPlayMode(Animation.PlayMode.LOOP);
+		animationStillDown.setPlayMode(Animation.PlayMode.LOOP);
+		animationStillLeft.setPlayMode(Animation.PlayMode.LOOP);
+		animationStillRight.setPlayMode(Animation.PlayMode.LOOP);
+		animationUp.setPlayMode(Animation.PlayMode.LOOP);
+		animationDown.setPlayMode(Animation.PlayMode.LOOP);
+		animationLeft.setPlayMode(Animation.PlayMode.LOOP);
+		animationRight.setPlayMode(Animation.PlayMode.LOOP);
+		animationBombLeft.setPlayMode(Animation.PlayMode.LOOP);
+		animationBombRight.setPlayMode(Animation.PlayMode.LOOP);
+		animationLeft.setPlayMode(Animation.PlayMode.LOOP);
+		animationCube.setPlayMode(Animation.PlayMode.LOOP);
+		animationSitLeft.setPlayMode(Animation.PlayMode.LOOP);
+		animationSitRight.setPlayMode(Animation.PlayMode.LOOP);
+		animationDeadLeft.setPlayMode(Animation.PlayMode.LOOP);
+		animationDeadRight.setPlayMode(Animation.PlayMode.LOOP);
+		
+	}
+	*/
 }
