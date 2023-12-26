@@ -67,11 +67,14 @@ public class Pokemon extends Sprite{
 	public Boolean isLive = false;            //是否存活
 	public int lives = 100;                   //生命值
 	public boolean isAngry = false;           //是否被激怒
+	public boolean isScary = false;           //是否害怕
 	public boolean isAttacking = false;       //是否正在攻击
 	private int NearAttackValue = 45;         //近战伤害
 	private int farAttackValue = 30;          //远战伤害
 	
-	private Vector2 bornPosition[] = new Vector2[20];//生成地点
+	public boolean isFound = false;           //是否被发现
+	
+	private Vector2 bornPosition[] = new Vector2[99];//生成地点
 
 	public Pokemon() {
 	
@@ -262,13 +265,16 @@ public class Pokemon extends Sprite{
 		float disY = playerY - getY();
 		
 		boolean isTooCloseX = (disX >= -16 && disX <= 16);
-		boolean isCanSeeYouX = (disX < 200  && disX > 16) || (disX > -200 && disX < -16);
+		boolean isCanSeeYouX = (disX < 150  && disX > 16) || (disX > -150 && disX < -16);
 		
 		boolean isTooCloseY = (disY >= -16 && disY <= 16);
 		boolean isCanSeeYouY = (disY < 200  && disY > 16) || (disY > -200 && disY < -16);
 		
 		if(isLive) {//如果活着
 			
+			//如果靠近
+			if(isTooCloseX && isTooCloseY)
+				isFound = true;
 			//如果不是满血还靠太近
 			if(lives < MAXLIVES && isTooCloseX && isTooCloseY)
 				isAngry = true;
@@ -276,9 +282,9 @@ public class Pokemon extends Sprite{
 			if(lives < MAXLIVES / 2 && isCanSeeYouX && isCanSeeYouY)
 				isAngry = true;
 			
-			if(isAngry) {//如果被激怒
+			if(isAngry && !isScary) {//如果被激怒
 				//简陋的自动寻路
-				if(isCanSeeYouX) {
+				if(isCanSeeYouX && isCanSeeYouY) {
 					
 					if(disX > 0) {
 			        	velocity.x = speed;
@@ -289,19 +295,7 @@ public class Pokemon extends Sprite{
 						isMove_LEFT = true;
 						animationTime = 0;
 			        }
-				}else if(isTooCloseX) {
-					;
-				}else {
-					isAngry = false;
-					isAttacking = false;
-					isMove_UP = false;
-		        	isMove_DOWN = false;
-		        	isMove_RIGHT = false;
-		        	isMove_LEFT = false;
-		        	animationTime = 0;
 					
-				}
-				if(isCanSeeYouY) {
 					if(disY > 0) {
 			        	velocity.y = speed;
 						isMove_UP = true;
@@ -311,7 +305,7 @@ public class Pokemon extends Sprite{
 						isMove_DOWN = true;
 						animationTime = 0;
 			        }
-				}else if(isTooCloseY) {
+				}else if(isTooCloseX && isTooCloseY) {
 					;
 				}else {
 					isAngry = false;
@@ -340,35 +334,78 @@ public class Pokemon extends Sprite{
 				// 生成随机整数
 		        int randomNumber = random.nextInt();
 		        int minRange = 1;
-		        int maxRange = 5000;
+		        int maxRange = 10000;
 		        int randomInRange = random.nextInt(maxRange - minRange + 1) + minRange;
 			
-		        //随机移动
-		        if(randomInRange <= 25) {
-		        	velocity.y = speed;
-					isMove_UP = true;
-					animationTime = 0;
-		        }else if(randomInRange > 25 && randomInRange < 50) {
-		        	velocity.y = -speed;
-					isMove_DOWN = true;
-					animationTime = 0;
-		        }else if(randomInRange > 50 && randomInRange <= 75) {
-		        	velocity.x = -speed;
-					isMove_LEFT = true;
-					animationTime = 0;
-		        }else if(randomInRange >75 && randomInRange <= 100) {
-		        	velocity.x = speed;
-					isMove_RIGHT = true;
-					animationTime = 0;
-		        }else if(randomInRange >100 && randomInRange <= 500) {
-		        	;
-		        }else{
-		        	isMove_UP = false;
-		        	isMove_DOWN = false;
-		        	isMove_RIGHT = false;
-		        	isMove_LEFT = false;
-		        	animationTime = 0;
-		        }
+		        if (isScary) {//逃跑
+		        	//简陋的自动寻路
+					if(isCanSeeYouX || isTooCloseX) {
+						
+						if(disX > 0) {
+				        	velocity.x = -speed;
+							isMove_LEFT = true;
+							animationTime = 0;
+				        }else{
+				        	velocity.x = speed;
+							isMove_RIGHT = true;
+							animationTime = 0;
+				        }
+					}else {
+						isAngry = false;
+						isAttacking = false;
+						isMove_UP = false;
+			        	isMove_DOWN = false;
+			        	isMove_RIGHT = false;
+			        	isMove_LEFT = false;
+			        	animationTime = 0;
+						
+					}
+					if(isCanSeeYouY || isTooCloseY) {
+						if(disY > 0) {
+				        	velocity.y = -speed;
+							isMove_DOWN = true;
+							animationTime = 0;
+				        }else{
+				        	velocity.y = speed;
+							isMove_UP = true;
+							animationTime = 0;
+				        }
+					}else {
+						isAngry = false;
+						isAttacking = false;
+						isMove_UP = false;
+			        	isMove_DOWN = false;
+			        	isMove_RIGHT = false;
+			        	isMove_LEFT = false;
+			        	animationTime = 0;
+					}
+		        }else {//随机移动
+			        if(randomInRange <= 25) {
+			        	velocity.y = speed;
+						isMove_UP = true;
+						animationTime = 0;
+			        }else if(randomInRange > 25 && randomInRange < 50) {
+			        	velocity.y = -speed;
+						isMove_DOWN = true;
+						animationTime = 0;
+			        }else if(randomInRange > 50 && randomInRange <= 75) {
+			        	velocity.x = -speed;
+						isMove_LEFT = true;
+						animationTime = 0;
+			        }else if(randomInRange >75 && randomInRange <= 100) {
+			        	velocity.x = speed;
+						isMove_RIGHT = true;
+						animationTime = 0;
+			        }else if(randomInRange >100 && randomInRange <= 500) {
+			        	;
+			        }else{
+			        	isMove_UP = false;
+			        	isMove_DOWN = false;
+			        	isMove_RIGHT = false;
+			        	isMove_LEFT = false;
+			        	animationTime = 0;
+			        }
+		        } 
 			}
 		}
 	}
@@ -383,27 +420,69 @@ public class Pokemon extends Sprite{
 	        int maxRange = 100;
 	        int randomInRange = random.nextInt(maxRange - minRange + 1) + minRange;
 	        
-	        bornPosition[0] = new Vector2(150,100);
-	        bornPosition[1] = new Vector2(125,125);
-	        bornPosition[2] = new Vector2(250,250);
-	        bornPosition[3] = new Vector2(250,350);
-	        bornPosition[4] = new Vector2(100,350);
-	        bornPosition[5] = new Vector2(60,420);
-	        bornPosition[6] = new Vector2(400,350);
-	        bornPosition[7] = new Vector2(400,300);
-	        bornPosition[8] = new Vector2(400,400);
-	        bornPosition[9] = new Vector2(350,150);
-	        bornPosition[10] = new Vector2(400,150);
+	        //设置位置
+	        bornPosition[0] = new Vector2(600,7000);
+	        bornPosition[1] = new Vector2(600,6200);
+	        bornPosition[2] = new Vector2(600,5300);
+	        bornPosition[3] = new Vector2(600,4500);
+	        bornPosition[4] = new Vector2(530,4000);
+	        bornPosition[5] = new Vector2(1142,5063);
+	        bornPosition[6] = new Vector2(1266,6585);
+	        bornPosition[7] = new Vector2(2000,4400);
+	        bornPosition[8] = new Vector2(2000,4844);
+	        bornPosition[9] = new Vector2(3620,4488);
+	        bornPosition[10] = new Vector2(4100,5000);
+
+	 
+	        bornPosition[11] = new Vector2(4477,4407);
+	        bornPosition[12] = new Vector2(4341,3386);
+	        bornPosition[13] = new Vector2(3000,3000);
+	        bornPosition[14] = new Vector2(4000,2681);
+	        bornPosition[15] = new Vector2(3970,2030);
+	        bornPosition[16] = new Vector2(836,3573);
+	        bornPosition[17] = new Vector2(902,3346);
+	        bornPosition[18] = new Vector2(1563,2491);
+	        bornPosition[19] = new Vector2(1520,2491);
+	        bornPosition[20] = new Vector2(1581,2491);
 	        
-	        if(randomInRange <= 100) {
-	        	lives = MAXLIVES;
-	        	isLive = true;
-	        	NO = num;
-	        	setPosition(bornPosition[num].x * backgroundLayer.getTileWidth(), (backgroundLayer.getHeight() - bornPosition[num].y) * backgroundLayer.getTileHeight());
-	        	
-	        	return true;
-	        }
+
+	        bornPosition[21] = new Vector2(1581,2458);
+	        bornPosition[22] = new Vector2(1581,2529);
+	        bornPosition[23] = new Vector2(1808,805);
+	        bornPosition[24] = new Vector2(1860,805);
+	        bornPosition[25] = new Vector2(4000,2000);
+	        bornPosition[26] = new Vector2(6212,2175);
+	        bornPosition[27] = new Vector2(6890,2163);
+	        bornPosition[28] = new Vector2(5830,3769);
+	        bornPosition[29] = new Vector2(5155,3715);
+	        bornPosition[30] = new Vector2(7279,2975);
 	        
+
+	        bornPosition[31] = new Vector2(6759,1835);
+	        bornPosition[32] = new Vector2(5825,841);
+	        bornPosition[33] = new Vector2(6293,699);
+	        bornPosition[34] = new Vector2(4335,5434);
+	        bornPosition[35] = new Vector2(5019,7054);
+	        bornPosition[36] = new Vector2(6294,6429);
+	        bornPosition[37] = new Vector2(6619,7289);
+	        bornPosition[38] = new Vector2(5729,4029);
+	        bornPosition[39] = new Vector2(7319,6428);
+	        bornPosition[40] = new Vector2(2228,3162);
+	        
+	        bornPosition[41] = new Vector2(2127,3731);
+	        
+        	lives = MAXLIVES;
+        	isLive = true;
+        	NO = num;
+        	
+        	//生成位置
+        	setPosition(bornPosition[num].x, bornPosition[num].y);
+        	
+        	//随机性格
+        	isScary = (randomInRange <= 30) ? true : false;//少部分害怕
+        	isAngry = (randomInRange <= 10) ? true : false;//少部分愤怒
+			System.out.println(NO);
+        	return true;
     	}
 		return false;
 	}

@@ -22,12 +22,12 @@ import com.badlogic.gdx.math.Vector2;
 public class Player extends Sprite implements InputProcessor{//implements InputProcessor引入控制输入接口
 	
 	//玩家常量数据
-	public static final float POISTION_X = 150 , POISTION_Y = 100;//初始位置
-	public static final float SPEED = 60 * 2;                //初始速度
+	public static final float POISTION_X = 40 , POISTION_Y = 40;//初始位置
+	public static final float SPEED = 60 * 2.0f;                //初始速度
 	public static final float gravity = 60 * 1.8f;           //重力
-	public static final float friction = 60 * 2.0f;          //摩擦力
+	public static final float friction = 60 * 1.8f;          //摩擦力
 	
-	public static final float NORMAL_VIEW = 1.0f;            //正常的视野缩放
+	public static final float NORMAL_VIEW = 2.0f;            //正常的视野缩放
 	public static final float STRANGE_VIEW = 7.5f;           //奇怪的视野缩放
 	public static final float NORMAL_MEETODD = 10.0f;        //正常的奇遇值
 	public static final float STRANGE_MEETODD = 75.0f;       //奇怪的奇遇值
@@ -65,6 +65,9 @@ public class Player extends Sprite implements InputProcessor{//implements InputP
 	private int NearAttackValue = 45;          //近战伤害
 	private int farAttackValue = 30;           //远战伤害
 	
+	//调试参数
+	private float lastX, lastY;
+	
 	/*
 	public Player(TiledMapTileLayer collisionLayer) {
 		super();
@@ -95,6 +98,12 @@ public class Player extends Sprite implements InputProcessor{//implements InputP
 	}
 	
 	public void update(float delta) {
+		
+		if(lastX != getX() || lastY != getY()) {
+			System.out.println("(" + getX() + "," + getY() + ")");
+			lastX = getX();
+			lastY = getY();
+		}
 		
 		//进入奇异大陆，视野及奇遇值变换
 		float oldView = view;

@@ -2,13 +2,16 @@ package theScreen;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Screen;
+import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.GL30;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.Animation;
+import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.Sprite;
+import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureAtlas;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
@@ -59,21 +62,42 @@ public class PlayScreen implements Screen {
 	private TextureAtlas playerAtlas;//玩家图像集
 	private float oldView;   //玩家视野存值
 
-	private LinkedList<Pokemon> pokemons;                        //宝可梦对象链表
-	public static final int POKEMON_SPECIES_NUM = 11;             //宝可梦种类数量 
-	public static final int POKEMON_NUM = 11;                     //宝可梦最大数量 
-	private int pokemonNum = 0;                                  //当前宝可梦数量
-	private TextureAtlas pokemonsAtlas[] = new TextureAtlas[25]; //宝可梦图像集
-	private Animation Pup[] = new Animation[POKEMON_NUM],        //宝可梦动画资源
+	private LinkedList<Pokemon> pokemons;                         //宝可梦对象链表
+	public static final int POKEMON_SPECIES_NUM = 42;             //宝可梦种类数量 
+	public static final int POKEMON_NUM = 42;                     //宝可梦最大数量 
+	private int pokemonNum = 0;                                   //当前宝可梦数量
+	private TextureAtlas pokemonsAtlas[] = new TextureAtlas[99];  //宝可梦图像集
+	private Animation Pup[] = new Animation[POKEMON_NUM],         //宝可梦动画资源
 					Pdown[] = new Animation[POKEMON_NUM], 
 					Pleft[] = new Animation[POKEMON_NUM], 
 					Pright[] = new Animation[POKEMON_NUM];
+	
+	BitmapFont font;                                           //字体
+	private int foundNum = 0;                                  //已发现的宝可梦数量
+	private int oldFoundNum = 0;                               //上一次已发现的宝可梦数量
+	
+	private Sound scoreSound;                                  //得分音效
+	private Sound backgroundSound;                             //背景音乐
+	private Sound caveSound;                                   //洞穴音乐
 	
 	private LinkedList<Laser> lasers;                          //镭射对象链表
 	public static final int LASER_NUM = 100;                   //镭射最大数量
 	
 	@Override
 	public void show() {
+		
+		//加载字体
+		font = new BitmapFont();
+		font.setColor(Color.BLUE);
+		font.getData().setScale(1.2f);
+		
+		//加载音效
+		scoreSound = Gdx.audio.newSound(Gdx.files.internal("audio/score.ogg"));
+		backgroundSound = Gdx.audio.newSound(Gdx.files.internal("audio/background.ogg"));
+		//caveSound  = Gdx.audio.newSound(Gdx.files.internal("audio/JigglypuffSong.mp3"));
+		long soundId = backgroundSound.play(0.3f);
+		backgroundSound.setLooping(soundId, true);
+		
 		TmxMapLoader loader = new TmxMapLoader();
 		
 		//加载地图tmx文件 
@@ -206,12 +230,23 @@ public class PlayScreen implements Screen {
 		
 		//渲染宝可梦
 		ListIterator<Pokemon> iterator = pokemons.listIterator();
+		foundNum = 0;
 		while (iterator.hasNext()) {
         	Pokemon poke = iterator.next();
         	if(poke.isLive) {
         		poke.draw(renderer.getBatch());
         	} 
+        	if(poke.isFound) {
+        		foundNum++;
+        	}
         }
+		
+		//加分音效
+		if(oldFoundNum < foundNum) {
+			scoreSound.play(0.3f);
+			oldFoundNum = foundNum;
+		}
+		
 		
 		//渲染玩家
 		player.draw(renderer.getBatch());
@@ -268,7 +303,8 @@ public class PlayScreen implements Screen {
 			}
 		}
 		
-		
+		//渲染文字
+	    font.draw(renderer.getBatch(), "FoundPokemons: " + foundNum + "/" + POKEMON_NUM, player.getX() - 300, player.getY() + 190);
 		
 		//结束渲染
 		renderer.getBatch().end();
@@ -328,11 +364,6 @@ public class PlayScreen implements Screen {
         		poke.isLive = false;
         		pokemonNum--;
         	}
-        }
-        
-
-        
-		
+        }     
 	}
-
 }
