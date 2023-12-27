@@ -7,6 +7,6 @@
 */
 
 /**
- *初版游戏介绍（Java大作业汇报PPT）
+ *初版游戏设计介绍（Java大作业汇报PPT）
 */
-[Java_计科 12_第24组_一眼丁真队_WhereIsPokemon.pdf](https://github.com/yehu1999/PokemonLike-RPG/files/13777015/Java_.12_.24._._WhereIsPokemon.pdf)
+[游戏设计介绍.pdf](https://github.com/yehu1999/PokemonLike-RPG/files/13777061/default.pdf)
