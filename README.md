@@ -9,7 +9,7 @@
 目前游戏已经初具模样(仅支持“寻找宝可梦”玩法的初版作为本人的Java课程设计作业)
 
 /**
- *初版游戏设计介绍（Java大作业汇报PPT）
+ *初版游戏设计介绍（Java大作业汇报PPT，介绍PPT由组员完成）
 */
 [游戏设计介绍.pdf](https://github.com/yehu1999/PokemonLike-RPG/files/13777061/default.pdf)
 
